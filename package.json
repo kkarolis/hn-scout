@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Chrome extension with Playwright testing",
   "scripts": {
-    "build": "mkdir -p dist && cp src/manifest.json dist && tsc",
+    "build": "mkdir -p dist && cp src/manifest.json dist && cp src/styles.css dist && tsc",
     "postbuild": "ts-node scripts/generate-icons.ts",
     "test": "playwright test",
     "watch": "npm run build && tsc -w"

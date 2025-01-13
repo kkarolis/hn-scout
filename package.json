@@ -1,0 +1,19 @@
+{
+  "name": "chrome-extension-test",
+  "version": "1.0.0",
+  "description": "Chrome extension with Playwright testing",
+  "scripts": {
+    "build": "mkdir -p dist && cp src/manifest.json dist && tsc",
+    "postbuild": "ts-node scripts/generate-icons.ts",
+    "test": "playwright test",
+    "watch": "npm run build && tsc -w"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.1",
+    "@types/chrome": "^0.0.260",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.2",
+    "tsc-watch": "^6.2.1",
+    "typescript": "^5.4.2"
+  }
+}

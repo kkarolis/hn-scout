@@ -7,12 +7,14 @@ import { marshal, unMarshal } from './marshaler';
         private _savedMap: Map<string, string>;
         private _localStorage: Storage;
         private _clickCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void;
+        private _allPosts: string[];
 
         private readonly STORAGE_KEY: string = "hn-job-decisions";
         private readonly HASH_KEY: string = "#hn-job-decisions=";
         
-        constructor(localStorage: Storage, clickCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void) {
+        constructor(localStorage: Storage, allPosts: string[], clickCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void) {
             this._localStorage = localStorage;
+            this._allPosts = allPosts;
 
             // logic for loading data from hash
             const hash = window.location.hash;
@@ -48,7 +50,7 @@ import { marshal, unMarshal } from './marshaler';
         }
 
         public canHandleClick(e: Event): boolean {
-            return e.target instanceof HTMLElement && (e.target.classList.contains('hn-job-decision') || e.target.classList.contains('hn-job-decision-copy-share-link'));
+            return e.target instanceof HTMLElement && e.target.classList.contains('hn-job-decision');
         }
 
         private async copyShareLink(e: Event) {
@@ -57,16 +59,38 @@ import { marshal, unMarshal } from './marshaler';
             navigator.clipboard.writeText(window.location.href);
         }
 
-        public async handleClick(e: Event) {
-            if (!(e.target instanceof HTMLElement)) return;
+        private clearAll(e: Event) {
+            this._savedMap.clear();
+            this.saveToLocalStorage();
+            window.location.reload();
+        }
 
-            if (e.target.classList.contains('hn-job-decision-copy-share-link')) {
-                this.copyShareLink(e);
-                return;
+        private tail(e: Event) {
+            let target: string | undefined = this._allPosts.length > 0 ? this._allPosts[0] : undefined;
+            let previousJobId: string | undefined = target;
+            
+            // iterate backwards from last post and find job before one which
+            // has a decision. This will not work reliably as there are up-votes
+            // on some jobs which will move them to the top, but need to
+            // experiment, maybe it will be good enough in practice.
+            for (const jobId of [...this._allPosts].reverse()) {
+                if (this._savedMap.has(jobId)) {
+                    target = previousJobId;
+                    break;
+                }
+                previousJobId = jobId;
             }
+            
+            if (target !== undefined) {
+                window.location.hash = target;
+            }
+        }
 
-            const afterStatus: string = e.target.getAttribute('data-job-status') as string;
-            const jobId: string = e.target.getAttribute('data-job-id') as string;
+        private async handleDecision(e: Event) {
+            const target: HTMLElement = e.target as HTMLElement;
+
+            const afterStatus: string = target.getAttribute('data-job-status') as string;
+            const jobId: string = target.getAttribute('data-job-id') as string;
 
             const beforeStatus = this._savedMap.get(jobId);
 
@@ -75,21 +99,43 @@ import { marshal, unMarshal } from './marshaler';
                 this._savedMap.set(jobId, afterStatus);
                 this.saveToLocalStorage();
 
-                e.target.classList.add('selected');
+                target.classList.add('selected');
 
                 // de-select the other element
                 if (beforeStatus !== undefined) {
-                    const otherElement = document.querySelector(`a.hn-job-decision[data-job-status="${beforeStatus}"]`) as HTMLElement;
+                    const otherElement = document.querySelector(`a.hn-job-decision[data-job-status="${beforeStatus}"][data-job-id="${jobId}"]`) as HTMLElement;
                     otherElement.classList.remove('selected')
                 }
             } else {
                 this._savedMap.delete(jobId);
                 this.saveToLocalStorage();
-                e.target.classList.remove('selected');
+                target.classList.remove('selected');
             }
 
             // update the UI
-            this._clickCallback(e, jobId, beforeStatus, afterStatus);
+            await this._clickCallback(e, jobId, beforeStatus, afterStatus);
+
+        }
+
+        public async handleClick(e: Event) {
+            if (!(e.target instanceof HTMLElement)) return;
+
+            if (e.target.classList.contains('copy-share-link')) {
+                await this.copyShareLink(e);
+                return;
+            }
+
+            if (e.target.classList.contains('clear')) {
+                this.clearAll(e);
+                return;
+            }
+
+            if (e.target.classList.contains('tail')) {
+                this.tail(e);
+                return;
+            }
+
+            await this.handleDecision(e);
         }
 
         private html(strings: TemplateStringsArray, ...values: any[]): string {
@@ -111,7 +157,12 @@ import { marshal, unMarshal } from './marshaler';
                                     <td class="default">
                                         <div style="margin-top:2px; margin-bottom:-10px;">
                                             <span class="comhead">
-                                            HN Job Actions | <a href="javascript:void(0)" class="hn-job-decision-copy-share-link">copy share link</a>
+                                            HN Job Actions | 
+                                                <a href="javascript:void(0)" class="hn-job-decision copy-share-link">cp link</a>
+                                                |
+                                                <a href="javascript:void(0)" class="hn-job-decision clear">clear</a>
+                                                |
+                                                <a href="javascript:void(0)" class="hn-job-decision tail">tail</a>
                                             <br/>
                                             </span>
                                         </div><br/>
@@ -139,10 +190,33 @@ import { marshal, unMarshal } from './marshaler';
     }
 
     // install widget callback in the page
-    const hnJobDecisionWidget = new HNJobDecisionWidget(localStorage, (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => {
+    const allPosts = Array.from(document.querySelectorAll(`${selectorTopLevelComments} span.navs a[id]`)).map((el) => el.id);
+    const hnJobDecisionWidget = new HNJobDecisionWidget(localStorage, allPosts, async (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => {
         e.preventDefault();
-        if (beforeStatus === afterStatus || beforeStatus === undefined) {
-            (document.querySelector(`tr[id='${jobId}'] a[id='${jobId}']`) as HTMLElement)?.click();
+        const toggleClose = () => (document.querySelector(`tr[id='${jobId}'] a[id='${jobId}']`) as HTMLElement).click();
+        const next = () => {
+            const nodeList: NodeListOf<HTMLElement> = document.querySelectorAll(`tr[id='${jobId}'] span.navs a.clicky`);
+            const linksToNext = Array.from(nodeList).filter((el) => el.textContent === 'next');
+            if (linksToNext.length > 0) {
+                linksToNext[0].click();
+            }
+        };
+        if (beforeStatus === undefined) {
+            if (afterStatus === 'no') {
+                toggleClose();
+                next();
+            } else {
+                next();
+            }
+        } else {
+            if (afterStatus === 'no') {
+                toggleClose();
+            } else {
+                if (beforeStatus === 'no') {
+                    toggleClose();
+                }
+                next();
+            }
         }
     });
     hnJobDecisionWidget.enable(document);

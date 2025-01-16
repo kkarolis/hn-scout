@@ -8,10 +8,18 @@ export const test = base.extend<{
   context: BrowserContext;
   extensionId: string;
 }>({
+  page: async ({ page }, use) => {
+    page.on('console', msg => console.log(msg.text()));
+    page.on('pageerror', exception => {
+        console.error(`Uncaught exception: ${exception}`);
+    });
+    await use(page);
+  },
   context: async ({ }, use) => {
     const pathToExtension = path.join(__dirname, '../dist');
     console.log('pathToExtension', pathToExtension);
     const context = await chromium.launchPersistentContext('', {
+      // needed for extensions to work
       headless: false,
       args: [
         `--disable-extensions-except=${pathToExtension}`,

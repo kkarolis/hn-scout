@@ -4,4 +4,4 @@ test-results/
 playwright-report/
 .DS_store
 coverage/
-.vscode
+.vscode/

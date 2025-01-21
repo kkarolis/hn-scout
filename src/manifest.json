@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Background Color Changer",
+  "name": "HN Job Search",
   "version": "1.0",
-  "description": "Changes webpage background color",
+  "description": "Allows to search for jobs on Hacker News",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
@@ -15,6 +15,6 @@
     "js": ["extension.js"]
   }],
   "action": {
-    "default_title": "Background Color Changer"
+    "default_title": "HN Job Search"
   }
 } 

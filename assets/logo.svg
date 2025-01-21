@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (e7c3feb1, 2024-10-09)"
+   sodipodi:docname="drawing.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showguides="true"
+     showgrid="true"
+     inkscape:zoom="0.53417909"
+     inkscape:cx="-325.73345"
+     inkscape:cy="546.63315"
+     inkscape:window-width="3440"
+     inkscape:window-height="1387"
+     inkscape:window-x="1512"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <sodipodi:guide
+       position="108.57311,263.02713"
+       orientation="0,-1"
+       id="guide4"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="-24.866745,216.44576"
+       orientation="1,0"
+       id="guide5"
+       inkscape:locked="false" />
+    <inkscape:grid
+       id="grid5"
+       units="mm"
+       originx="0"
+       originy="0"
+       spacingx="0.99999998"
+       spacingy="1"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       enabled="true"
+       visible="true" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#0a0a0a;fill-opacity:1;stroke-width:0.502272"
+       id="rect1"
+       width="154.80424"
+       height="154.80424"
+       x="29.945166"
+       y="50.083725" />
+    <text
+       xml:space="preserve"
+       style="font-size:84.6667px;font-family:'Geeza Pro';-inkscape-font-specification:'Geeza Pro';text-align:start;letter-spacing:0.264583px;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#bead60;fill-opacity:1;stroke-width:0.499999"
+       x="52.485043"
+       y="139.17482"
+       id="text3-1"><tspan
+         sodipodi:role="line"
+         id="tspan3-8"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:84.6667px;font-family:'MesloLGM Nerd Font Mono';-inkscape-font-specification:'MesloLGM Nerd Font Mono';fill:#bead60;fill-opacity:1;stroke-width:0.5"
+         x="52.485043"
+         y="139.17482">H</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:34.5722px;font-family:'Geeza Pro';-inkscape-font-specification:'Geeza Pro';text-align:start;letter-spacing:0.264583px;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#bead60;fill-opacity:1;stroke-width:0.499999"
+       x="54.958115"
+       y="175.46295"
+       id="text3-1-3"><tspan
+         sodipodi:role="line"
+         id="tspan3-8-7"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:34.5722px;font-family:'MesloLGM Nerd Font Mono';-inkscape-font-specification:'MesloLGM Nerd Font Mono';fill:#bead60;fill-opacity:1;stroke-width:0.5"
+         x="54.958115"
+         y="175.46295">scout</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:84.6667px;font-family:'Geeza Pro';-inkscape-font-specification:'Geeza Pro';text-align:start;letter-spacing:0.264583px;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#bead60;fill-opacity:1;stroke-width:0.499999"
+       x="111.91326"
+       y="139.01093"
+       id="text3-1-6"><tspan
+         sodipodi:role="line"
+         id="tspan3-8-1"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:84.6667px;font-family:'MesloLGM Nerd Font Mono';-inkscape-font-specification:'MesloLGM Nerd Font Mono';fill:#bead60;fill-opacity:1;stroke-width:0.5"
+         x="111.91326"
+         y="139.01093">N</tspan></text>
+  </g>
+</svg>

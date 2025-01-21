@@ -3,9 +3,8 @@ import { marshal, unMarshal } from './marshaler';
 class HNJobDecisionWidget {
     private _savedMap: Map<string, string>;
     private _localStorage: Storage;
-    private _clickCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void;
+    private _navigationCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void;
     private _allPosts: string[]; // we use this to navigate to "tail" to next post
-    private _month: string;
     private _dateSpecifier: string;
     private _storageKey: string;
     private _storagePointerKey: string;
@@ -14,13 +13,14 @@ class HNJobDecisionWidget {
     private readonly STORAGE_KEY_POINTER_PREFIX: string = "hn-scout-pointer";
     private readonly HASH_KEY: string = "#hn-scout=";
 
-    constructor(localStorage: Storage, dateSpecifier: string, allPosts: string[], clickCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void) {
+    constructor(localStorage: Storage, dateSpecifier: string, allPosts: string[], navigationCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void) {
         this._localStorage = localStorage;
+
         this._allPosts = allPosts;
+
         this._dateSpecifier = dateSpecifier;
-        this._month = dateSpecifier.split('-')[1];
         this._storageKey = `${this.STORAGE_KEY_PREFIX}-${this._dateSpecifier}`;
-        this._storagePointerKey = `${this.STORAGE_KEY_POINTER_PREFIX}-${this._month}`;
+        this._storagePointerKey = `${this.STORAGE_KEY_POINTER_PREFIX}-${dateSpecifier.split('-')[1]}`;
 
         // clear old storage if it exists
         const existingStorageKey: string | null = localStorage.getItem(this._storagePointerKey)
@@ -39,15 +39,10 @@ class HNJobDecisionWidget {
             // remove last # from the section
             window.location.href = window.location.href.slice(0, -1);
         } else {
-            // need to namespace to month of year.
             this._savedMap = new Map(JSON.parse(localStorage.getItem(this._storageKey) as string || '[]'));
         }
 
-        this._clickCallback = clickCallback;
-    }
-
-    private saveToLocalStorage(): void {
-        this._localStorage.setItem(this._storageKey, JSON.stringify(Array.from(this._savedMap.entries())));
+        this._navigationCallback = navigationCallback;
     }
 
     public enable(document: Document) {
@@ -64,6 +59,76 @@ class HNJobDecisionWidget {
 
     public canHandleClick(e: Event): boolean {
         return e.target instanceof HTMLElement && e.target.classList.contains('hn-scout');
+    }
+
+    public async handleClick(e: Event) {
+        if (!(e.target instanceof HTMLElement)) return;
+
+        if (e.target.classList.contains('hn-scout-copy-share-link')) {
+            await this.copyShareLink(e);
+            return;
+        }
+
+        if (e.target.classList.contains('hn-scout-clear')) {
+            this.clearAll(e);
+            return;
+        }
+
+        if (e.target.classList.contains('hn-scout-tail')) {
+            this.tail(e);
+            return;
+        }
+
+        await this.handleDecision(e);
+    }
+
+    public getHtmlToolbarElementText(): string {
+        return this.html`
+            <tr class="coll athing comtr" id="doesnotexist">
+                <td>
+                    <table border="0">
+                        <tbody>
+                            <tr>
+                                <td class="ind" indent="0"></td>
+                                <td valign="top" class="nosee votelinks" style="background-size: 10px;">
+                                    <center><div class="votearrow" style="background-image: none;"></div></center>
+                                </td>
+                                <td class="default">
+                                    <div style="margin-top:2px; margin-bottom:-10px;">
+                                        <span class="comhead">
+                                        HN Scout | 
+                                            <a href="javascript:void(0)" class="hn-scout hn-scout-copy-share-link">cp link</a>
+                                            |
+                                            <a href="javascript:void(0)" class="hn-scout hn-scout-clear">clear</a>
+                                            |
+                                            <a href="javascript:void(0)" class="hn-scout hn-scout-tail">tail</a>
+                                        <br/>
+                                        </span>
+                                    </div><br/>
+                                    <div class="noshow comment"><div class="commtext c00"></div></div>
+                                    <br/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        `.trim();
+    }
+
+    public getHtmlPerCommentElementText(id: string): string {
+        return this.html`
+            <a href="#" class="hn-scout ${this._savedMap.get(id) === 'yes' ? 'selected' : ''}" 
+                data-job-id="${id}" data-job-status="yes">yes</a> |
+            <a href="#" class="hn-scout ${this._savedMap.get(id) === 'no' ? 'selected' : ''}" 
+                data-job-id="${id}" data-job-status="no">no</a> |
+            <a href="#" class="hn-scout ${this._savedMap.get(id) === 'maybe' ? 'selected' : ''}" 
+                data-job-id="${id}" data-job-status="maybe">maybe</a>
+        `.trim();
+    }
+
+    private saveToLocalStorage(): void {
+        this._localStorage.setItem(this._storageKey, JSON.stringify(Array.from(this._savedMap.entries())));
     }
 
     private async copyShareLink(e: Event) {
@@ -126,79 +191,11 @@ class HNJobDecisionWidget {
         }
 
         // update the UI
-        await this._clickCallback(e, jobId, beforeStatus, afterStatus);
-
-    }
-
-    public async handleClick(e: Event) {
-        if (!(e.target instanceof HTMLElement)) return;
-
-        if (e.target.classList.contains('hn-scout-copy-share-link')) {
-            await this.copyShareLink(e);
-            return;
-        }
-
-        if (e.target.classList.contains('hn-scout-clear')) {
-            this.clearAll(e);
-            return;
-        }
-
-        if (e.target.classList.contains('hn-scout-tail')) {
-            this.tail(e);
-            return;
-        }
-
-        await this.handleDecision(e);
+        await this._navigationCallback(e, jobId, beforeStatus, afterStatus);
     }
 
     private html(strings: TemplateStringsArray, ...values: any[]): string {
         return String.raw({ raw: strings }, ...values);
-    }
-
-    // some good old brittle html with implied structure
-    public getHtmlToolbarElementText(): string {
-        return this.html`
-            <tr class="coll athing comtr" id="doesnotexist">
-                <td>
-                    <table border="0">
-                        <tbody>
-                            <tr>
-                                <td class="ind" indent="0"></td>
-                                <td valign="top" class="nosee votelinks" style="background-size: 10px;">
-                                    <center><div class="votearrow" style="background-image: none;"></div></center>
-                                </td>
-                                <td class="default">
-                                    <div style="margin-top:2px; margin-bottom:-10px;">
-                                        <span class="comhead">
-                                        HN Scout | 
-                                            <a href="javascript:void(0)" class="hn-scout hn-scout-copy-share-link">cp link</a>
-                                            |
-                                            <a href="javascript:void(0)" class="hn-scout hn-scout-clear">clear</a>
-                                            |
-                                            <a href="javascript:void(0)" class="hn-scout hn-scout-tail">tail</a>
-                                        <br/>
-                                        </span>
-                                    </div><br/>
-                                    <div class="noshow comment"><div class="commtext c00"></div></div>
-                                    <br/>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        `.trim();
-    }
-
-    public getHtmlPerCommentElementText(id: string): string {
-        return this.html`
-            <a href="#" class="hn-scout ${this._savedMap.get(id) === 'yes' ? 'hn-scout-selected' : ''}" 
-                data-job-id="${id}" data-job-status="yes">yes</a> |
-            <a href="#" class="hn-scout ${this._savedMap.get(id) === 'no' ? 'hn-scout-selected' : ''}" 
-                data-job-id="${id}" data-job-status="no">no</a> |
-            <a href="#" class="hn-scout ${this._savedMap.get(id) === 'maybe' ? 'hn-scout-selected' : ''}" 
-                data-job-id="${id}" data-job-status="maybe">maybe</a>
-        `.trim();
     }
 }
 
@@ -235,12 +232,22 @@ class HNJobDecisionWidget {
         e.preventDefault();
 
         const toggleClose = () => (document.querySelector(`tr[id='${jobId}'] a[id='${jobId}']`) as HTMLElement).click();
+        const next = () => {
+            const nodeList: NodeListOf<HTMLElement> = document.querySelectorAll(`tr[id='${jobId}'] span.navs a.clicky`);
+            const linksToNext = Array.from(nodeList).filter((el) => el.textContent === 'next');
+            if (linksToNext.length > 0) {
+                linksToNext[0].click();
+            }
+        };
 
         // handles the navigation logic
         // some delicious mommas spaghetti right here 
+        // we'll be mostly clicking no, so let's limit navigation on that choice
         if (beforeStatus === undefined) {
             if (afterStatus === 'no') {
                 toggleClose();
+            } else {
+                next();
             }
         } else {
             if (afterStatus === 'no') {
@@ -249,6 +256,7 @@ class HNJobDecisionWidget {
                 if (beforeStatus === 'no') {
                     toggleClose();
                 }
+                next();
             }
         }
     });

@@ -77,3 +77,20 @@ test('widget correctly handles same month but different year posts', async ({ pa
   const newHash = await page.evaluate(() => { return window.location.hash });
   expect(oldHash).not.toBe(newHash);
 });
+
+test('navigating to old post from new post does not reset the state', async ({ page }) => {
+  // old post from January 2024
+
+  // new post from January 2025
+  await page.goto('https://news.ycombinator.com/item?id=42575537');
+  await page.click("a.hn-scout.hn-scout-copy-share-link");
+  const newHash = await page.evaluate(() => { return window.location.hash });
+
+  const oldPostId = '38844766';
+  await page.goto('https://news.ycombinator.com/item?id=38842977');
+
+  await page.click(`tr[id='${oldPostId}'] a.hn-scout[data-job-status='no']`);
+  await page.click("a.hn-scout.hn-scout-copy-share-link");
+  const oldHash = await page.evaluate(() => { return window.location.hash });
+  expect(oldHash).not.toBe(newHash);
+});

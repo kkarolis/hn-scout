@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "HN Job Search",
+  "name": "HN Scout",
   "version": "1.0",
-  "description": "Allows to search for jobs on Hacker News",
+  "description": "A tool to help you iterate through Hacker News 'Who is hiring' posts",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
@@ -15,6 +15,6 @@
     "js": ["extension.js"]
   }],
   "action": {
-    "default_title": "HN Job Search"
+    "default_title": "HN Scout"
   }
 } 

@@ -8,7 +8,7 @@
     "48": "icon48.png",
     "128": "icon128.png"
   },
-  "permissions": ["activeTab", "scripting", "tabs", "clipboardWrite"],
+  "permissions": ["activeTab", "clipboardWrite"],
   "content_scripts": [{
     "matches": ["https://news.ycombinator.com/*"],
     "css": ["styles.css"],

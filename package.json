@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "description": "Chrome extension for Hacker News Scout",
   "scripts": {
-    "build": "webpack",
-    "build:prod": "webpack --mode production",
+    "build": "webpack --config webpack.config.js",
+    "build:prod": "webpack --mode production --config webpack.config.js",
     "clean": "rm -rf dist",
-    "watch": "webpack --watch",
-    "test": "playwright test && jest --coverage"
+    "watch": "webpack --config webpack.config.js --watch",
+    "test": "playwright test && jest --coverage",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
@@ -15,12 +18,15 @@
     "@types/jest": "^29.5.12",
     "@types/node": "^20.0.0",
     "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^7.1.2",
+    "style-loader": "^4.0.0",
     "ts-jest": "^29.1.2",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsc-watch": "^6.2.1",
     "typescript": "^5.4.2",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^6.0.1",
+    "zip-webpack-plugin": "^4.0.3"
   },
   "dependencies": {
     "lz-string": "^1.5.0"

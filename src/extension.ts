@@ -5,9 +5,8 @@ class HNJobDecisionWidget {
     private _localStorage: Storage;
     private _navigationCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void;
     private _allPosts: string[]; // we use this to navigate to "tail" to next post
-    private _dateSpecifier: string;
+
     private _storageKey: string;
-    private _storagePointerKey: string;
 
     private readonly STORAGE_KEY_PREFIX: string = "hn-scout";
     private readonly STORAGE_KEY_POINTER_PREFIX: string = "hn-scout-pointer";
@@ -18,17 +17,21 @@ class HNJobDecisionWidget {
 
         this._allPosts = allPosts;
 
-        this._dateSpecifier = dateSpecifier;
-        this._storageKey = `${this.STORAGE_KEY_PREFIX}-${this._dateSpecifier}`;
-        this._storagePointerKey = `${this.STORAGE_KEY_POINTER_PREFIX}-${dateSpecifier.split('-')[1]}`;
+        const month: string = dateSpecifier.split('-')[1];
+        this._storageKey = `${this.STORAGE_KEY_PREFIX}-${month}`;
 
         // clear old storage if it exists
-        const existingStorageKey: string | null = localStorage.getItem(this._storagePointerKey)
-        if (existingStorageKey !== null && existingStorageKey !== this._storageKey) {
-            localStorage.removeItem(existingStorageKey);
+        const storagePointerKey: string = `${this.STORAGE_KEY_POINTER_PREFIX}-${month}`;
+        const storagePointerValueOld: string | null = localStorage.getItem(storagePointerKey);
+        const storagePointerValueNew: string = dateSpecifier;
+        
+        if (storagePointerValueOld === null) {
+            localStorage.setItem(storagePointerKey, storagePointerValueNew);
+        } else if (storagePointerValueOld < storagePointerValueNew) {
+            localStorage.removeItem(this._storageKey);
+            localStorage.setItem(storagePointerKey, storagePointerValueNew);
         }
 
-        // logic for loading data from hash
         const hash = window.location.hash;
         if (hash.startsWith(this.HASH_KEY)) {
             const compressedData = hash.substring(this.HASH_KEY.length);
@@ -55,6 +58,10 @@ class HNJobDecisionWidget {
 
     public hasStorageItem(key: string): boolean {
         return this._savedMap.has(key);
+    }
+
+    public shouldCollapse(key: string): boolean {
+        return this._savedMap.get(key) === 'no';
     }
 
     public canHandleClick(e: Event): boolean {
@@ -140,7 +147,11 @@ class HNJobDecisionWidget {
     private clearAll(e: Event) {
         this._savedMap.clear();
         this.saveToLocalStorage();
+        window.location.hash = '';
         window.location.reload();
+        if (window.location.href.endsWith('#')) {
+            window.location.href = window.location.href.slice(0, -1);
+        }
     }
 
     private tail(e: Event) {
@@ -160,7 +171,11 @@ class HNJobDecisionWidget {
         }
         
         if (target !== undefined) {
+            window.location.hash = '';
             window.location.hash = target;
+
+            // Ensure element is in view
+            document.getElementById(target)?.scrollIntoView();
         }
     }
 
@@ -225,6 +240,8 @@ class HNJobDecisionWidget {
 
     // install widget callback in the page
     const allPosts = Array.from(document.querySelectorAll(`${selectorTopLevelComments} span.navs a[id]`)).map((el) => el.id);
+
+    // kinda assuming date is UTC here.
     const dateSpecifier: string = parseDate((document.querySelector("table.fatitem span.age") as HTMLElement).title);
 
 
@@ -271,7 +288,7 @@ class HNJobDecisionWidget {
         let jobElements = hnJobDecisionWidget.getHtmlPerCommentElementText(jobId);
         el.insertAdjacentHTML('afterend', ` | ${jobElements}`);
 
-        if (hnJobDecisionWidget.hasStorageItem(jobId)) {
+        if (hnJobDecisionWidget.hasStorageItem(jobId) && hnJobDecisionWidget.shouldCollapse(jobId)) {
             (document.querySelector(`tr[id='${jobId}'] a[id='${jobId}']`) as HTMLElement)?.click();
         }
     });

@@ -1,7 +1,9 @@
 node_modules/
 dist/
 test-results/
+releases/
 playwright-report/
 .DS_store
 coverage/
 .vscode/
+webpack.config.js

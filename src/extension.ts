@@ -36,11 +36,12 @@ class HNJobDecisionWidget {
         if (hash.startsWith(this.HASH_KEY)) {
             const compressedData = hash.substring(this.HASH_KEY.length);
             this._savedMap = new Map(unMarshal(compressedData));
+            console.log(this._savedMap);
             this.saveToLocalStorage();
-            window.location.hash = '';
+            // window.location.hash = '';
 
             // remove last # from the section
-            window.location.href = window.location.href.slice(0, -1);
+            // window.location.href = window.location.href.slice(0, -1);
         } else {
             this._savedMap = new Map(JSON.parse(localStorage.getItem(this._storageKey) as string || '[]'));
         }

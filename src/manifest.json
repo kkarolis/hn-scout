@@ -4,9 +4,9 @@
   "version": "1.0",
   "description": "A tool to help you iterate through Hacker News 'Who is hiring' posts",
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "permissions": ["activeTab", "clipboardWrite"],
   "content_scripts": [{

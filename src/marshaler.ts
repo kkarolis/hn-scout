@@ -1,4 +1,7 @@
 import { compressToEncodedURIComponent, decompressFromEncodedURIComponent } from 'lz-string';
+import 'core-js/modules/esnext.uint8-array.to-hex';
+import 'core-js/modules/esnext.uint8-array.from-hex';
+
 
 function forwardDifferentialCoding(numbers: number[]): number[] {
   return numbers.reduce((acc: number[], curr: number, idx: number) => {
@@ -13,7 +16,8 @@ function forwardDifferentialCoding(numbers: number[]): number[] {
   }, []);
 }
 
-function variableLengthEncode(num: number): number[] {
+
+function variableLengthEncode(num: number): Uint8Array {
   const bytes: number[] = [];
 
   let value = Math.abs(num);
@@ -24,10 +28,10 @@ function variableLengthEncode(num: number): number[] {
     if (!hasMore) break;
   }
 
-  return bytes;
+  return new Uint8Array(bytes);
 }
 
-function variableLengthDecode(bytes: number[]): number {
+function variableLengthDecode(bytes: Uint8Array): number {
   let value = 0;
   for (let i = bytes.length - 1; i >= 0; i--) {
     value = (value << 8) | (bytes[i] & 0xFF);
@@ -62,7 +66,7 @@ export function marshal(map: Map<string, string>): string {
         const forwardDifferentialCodingNumbers = forwardDifferentialCoding(sortedJobIdsInt);
         const variableLengthEncodedNumbers = forwardDifferentialCodingNumbers.map((number) => {
             const bytes = variableLengthEncode(number);
-            return bytes.map((byte) => String.fromCharCode(byte)).join('');
+            return bytes.toHex();
         });
         return [decision, variableLengthEncodedNumbers.join(',')].join('|');
     });
@@ -87,10 +91,7 @@ export function unMarshal(str: string): Map<string, string> {
         
         // Decode each variable length encoded number
         const decodedNumbers = encodedNumbersList.map(encoded => {
-            const bytes: number[] = [];
-            for (let i = 0; i < encoded.length; i++) {
-                bytes.push(encoded.charCodeAt(i));
-            }
+            const bytes: Uint8Array = Uint8Array.fromHex(encoded);
             return variableLengthDecode(bytes);
         });
 

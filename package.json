@@ -1,6 +1,6 @@
 {
   "name": "hn-scout-chrome-extension",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Chrome extension for Hacker News Scout",
   "scripts": {
     "build": "webpack --config webpack.config.js",

@@ -3,16 +3,26 @@ import { marshal, unMarshal } from './marshaler';
 class HNJobDecisionWidget {
     private _savedMap: Map<string, string>;
     private _localStorage: Storage;
-    private _navigationCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void;
+    private _navigationCallback: (
+        e: Event,
+        jobId: string,
+        beforeStatus: string | undefined,
+        afterStatus: string
+    ) => void;
     private _allPosts: string[]; // we use this to navigate to "tail" to next post
 
     private _storageKey: string;
 
-    private readonly STORAGE_KEY_PREFIX: string = "hn-scout";
-    private readonly STORAGE_KEY_POINTER_PREFIX: string = "hn-scout-pointer";
-    private readonly HASH_KEY: string = "#hn-scout=";
+    private readonly STORAGE_KEY_PREFIX: string = 'hn-scout';
+    private readonly STORAGE_KEY_POINTER_PREFIX: string = 'hn-scout-pointer';
+    private readonly HASH_KEY: string = '#hn-scout=';
 
-    constructor(localStorage: Storage, dateSpecifier: string, allPosts: string[], navigationCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void) {
+    constructor(
+        localStorage: Storage,
+        dateSpecifier: string,
+        allPosts: string[],
+        navigationCallback: (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => void
+    ) {
         this._localStorage = localStorage;
 
         this._allPosts = allPosts;
@@ -24,7 +34,7 @@ class HNJobDecisionWidget {
         const storagePointerKey: string = `${this.STORAGE_KEY_POINTER_PREFIX}-${month}`;
         const storagePointerValueOld: string | null = localStorage.getItem(storagePointerKey);
         const storagePointerValueNew: string = dateSpecifier;
-        
+
         if (storagePointerValueOld === null) {
             localStorage.setItem(storagePointerKey, storagePointerValueNew);
         } else if (storagePointerValueOld < storagePointerValueNew) {
@@ -36,14 +46,13 @@ class HNJobDecisionWidget {
         if (hash.startsWith(this.HASH_KEY)) {
             const compressedData = hash.substring(this.HASH_KEY.length);
             this._savedMap = new Map(unMarshal(compressedData));
-            console.log(this._savedMap);
             this.saveToLocalStorage();
-            // window.location.hash = '';
+            window.location.hash = '';
 
             // remove last # from the section
-            // window.location.href = window.location.href.slice(0, -1);
+            window.location.href = window.location.href.slice(0, -1);
         } else {
-            this._savedMap = new Map(JSON.parse(localStorage.getItem(this._storageKey) as string || '[]'));
+            this._savedMap = new Map(JSON.parse((localStorage.getItem(this._storageKey) as string) || '[]'));
         }
 
         this._navigationCallback = navigationCallback;
@@ -54,7 +63,7 @@ class HNJobDecisionWidget {
             if (this.canHandleClick(e)) {
                 await this.handleClick(e);
             }
-        })
+        });
     }
 
     public hasStorageItem(key: string): boolean {
@@ -158,7 +167,7 @@ class HNJobDecisionWidget {
     private tail(e: Event) {
         let target: string | undefined = this._allPosts.length > 0 ? this._allPosts[0] : undefined;
         let previousJobId: string | undefined = target;
-        
+
         // iterate backwards from last post and find job before one which
         // has a decision. This will not work reliably as there are up-votes
         // on some jobs which will move them to the top, but need to
@@ -170,7 +179,7 @@ class HNJobDecisionWidget {
             }
             previousJobId = jobId;
         }
-        
+
         if (target !== undefined) {
             window.location.hash = '';
             window.location.hash = target;
@@ -197,8 +206,10 @@ class HNJobDecisionWidget {
 
             // de-select the other element
             if (beforeStatus !== undefined) {
-                const otherElement = document.querySelector(`a.hn-scout[data-job-status="${beforeStatus}"][data-job-id="${jobId}"]`) as HTMLElement;
-                otherElement.classList.remove('selected')
+                const otherElement = document.querySelector(
+                    `a.hn-scout[data-job-status="${beforeStatus}"][data-job-id="${jobId}"]`
+                ) as HTMLElement;
+                otherElement.classList.remove('selected');
             }
         } else {
             this._savedMap.delete(jobId);
@@ -220,12 +231,12 @@ class HNJobDecisionWidget {
 
     const isAuthoredByWhoIsHiring = () => {
         return document.querySelector("table.fatitem a[href='user?id=whoishiring']") !== null;
-    }
+    };
 
     const isWhoIsHiringPost = () => {
-        const titleLine: HTMLElement = document.querySelector("table.fatitem span.titleline a") as HTMLElement;
-        return titleLine.textContent?.includes("Who is hiring?");
-    }
+        const titleLine: HTMLElement = document.querySelector('table.fatitem span.titleline a') as HTMLElement;
+        return titleLine.textContent?.includes('Who is hiring?');
+    };
 
     // only install the widget on who is hiring posts
     if (!isAuthoredByWhoIsHiring() || !isWhoIsHiringPost()) {
@@ -240,48 +251,59 @@ class HNJobDecisionWidget {
     }
 
     // install widget callback in the page
-    const allPosts = Array.from(document.querySelectorAll(`${selectorTopLevelComments} span.navs a[id]`)).map((el) => el.id);
+    const allPosts = Array.from(document.querySelectorAll(`${selectorTopLevelComments} span.navs a[id]`)).map(
+        (el) => el.id
+    );
 
     // kinda assuming date is UTC here.
-    const dateSpecifier: string = parseDate((document.querySelector("table.fatitem span.age") as HTMLElement).title);
+    const dateSpecifier: string = parseDate((document.querySelector('table.fatitem span.age') as HTMLElement).title);
 
+    const hnJobDecisionWidget = new HNJobDecisionWidget(
+        localStorage,
+        dateSpecifier,
+        allPosts,
+        async (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => {
+            e.preventDefault();
 
-    const hnJobDecisionWidget = new HNJobDecisionWidget(localStorage, dateSpecifier, allPosts, async (e: Event, jobId: string, beforeStatus: string | undefined, afterStatus: string) => {
-        e.preventDefault();
-
-        const toggleClose = () => (document.querySelector(`tr[id='${jobId}'] a[id='${jobId}']`) as HTMLElement).click();
-        const next = () => {
-            const nodeList: NodeListOf<HTMLElement> = document.querySelectorAll(`tr[id='${jobId}'] span.navs a.clicky`);
-            const linksToNext = Array.from(nodeList).filter((el) => el.textContent === 'next');
-            if (linksToNext.length > 0) {
-                linksToNext[0].click();
-            }
-        };
-
-        // handles the navigation logic
-        // some delicious mommas spaghetti right here 
-        // we'll be mostly clicking no, so let's limit navigation on that choice
-        if (beforeStatus === undefined) {
-            if (afterStatus === 'no') {
-                toggleClose();
-            } else {
-                next();
-            }
-        } else {
-            if (afterStatus === 'no') {
-                toggleClose();
-            } else {
-                if (beforeStatus === 'no') {
-                    toggleClose();
+            const toggleClose = () =>
+                (document.querySelector(`tr[id='${jobId}'] a[id='${jobId}']`) as HTMLElement).click();
+            const next = () => {
+                const nodeList: NodeListOf<HTMLElement> = document.querySelectorAll(
+                    `tr[id='${jobId}'] span.navs a.clicky`
+                );
+                const linksToNext = Array.from(nodeList).filter((el) => el.textContent === 'next');
+                if (linksToNext.length > 0) {
+                    linksToNext[0].click();
                 }
-                next();
+            };
+
+            // handles the navigation logic
+            // some delicious mommas spaghetti right here
+            // we'll be mostly clicking no, so let's limit navigation on that choice
+            if (beforeStatus === undefined) {
+                if (afterStatus === 'no') {
+                    toggleClose();
+                } else {
+                    next();
+                }
+            } else {
+                if (afterStatus === 'no') {
+                    toggleClose();
+                } else {
+                    if (beforeStatus === 'no') {
+                        toggleClose();
+                    }
+                    next();
+                }
             }
         }
-    });
+    );
 
     hnJobDecisionWidget.enable(document);
 
-    document.querySelector('table.comment-tree tbody')?.insertAdjacentHTML('afterbegin', hnJobDecisionWidget.getHtmlToolbarElementText());
+    document
+        .querySelector('table.comment-tree tbody')
+        ?.insertAdjacentHTML('afterbegin', hnJobDecisionWidget.getHtmlToolbarElementText());
 
     // render the widget into the page
     document.querySelectorAll(`${selectorTopLevelComments} span.navs a[id]`).forEach((el) => {
